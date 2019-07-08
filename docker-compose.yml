@@ -1,0 +1,55 @@
+version: '3'
+
+services: 
+  fluentd:
+    image           : fluentd
+    build           : ./common/fluentd
+    container_name  : fluentd
+    restart         : always 
+    volumes         : 
+      - ./common/fluentd/etc:/fluentd/etc
+    ports           :
+      - 24225:24224 
+    networks        :
+      - emsnet 
+  
+  elasticsearch:
+    image           : docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+    restart         : always
+    container_name  : elasticsearch
+    environment     :
+      discovery.type: single-node
+    expose: 
+      - 9200
+    ports:
+      - 9200:9200
+    networks        :
+      - emsnet 
+
+  httpd:
+    image           : httpd
+    container_name  : httpd
+    restart         : always
+    ports           :
+      - 80:80
+    logging: 
+      driver: fluentd
+      options: 
+        fluentd-address: localhost:24225
+        tag: http.access
+    networks: 
+      - emsnet
+  
+  kibana:
+    image               : docker.elastic.co/kibana/kibana:6.2.3
+    container_name      : kibana
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    networks:
+      - emsnet
+
+networks: 
+  emsnet:
+    driver: bridge

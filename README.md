@@ -1,2 +1,1 @@
-# -docker-fluentd
-application docker
+#Documentation docker server
